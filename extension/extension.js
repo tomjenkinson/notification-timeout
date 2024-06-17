@@ -33,6 +33,7 @@
  * THE SOFTWARE.
  */
 
+import * as NotificationDaemon from 'resource:///org/gnome/shell/ui/notificationDaemon.js';
 import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
@@ -48,34 +49,72 @@ export default class NotificationTimeoutExtension extends Extension {
         newTimeout = this._settings.get_int("timeout");
 
     }
+    
+    _modifiedDestroy(reason = MessageTray.NotificationDestroyedReason.DISMISSED) {
+        if (reason === MessageTray.NotificationDestroyedReason.SOURCE_CLOSED) {
+            log("TOM: _modifiedDestroy is called, ignoring");
+            //console.warn(new Error().stack);
+        } else {
+            //log("TOM: _modifiedDestroy is called, allowing: ", reason);
+            this._destroyOrig(reason);
+        }
+    }
+    
+    
+    _closeNotification(notification) {
+        log("TOM: _closeNotification is called, ignoring");
+        //console.warn(new Error().stack);
+    }
+    
+    _addNotification(notification) {
+        // log("TOM: _addNotification is called");
+        if (notification.urgency != MessageTray.Urgency.CRITICAL) {
+            log("TOM: overriding urgency");
+            //console.warn(new Error().stack);
+            notification.urgency = MessageTray.Urgency.CRITICAL;
+        }
+        this._addNotificationOrig(notification);
+    }
 
     _modifiedUpdateNotificationTimeout(timeout) {
-        if (timeout > 0) {
-            timeout = newTimeout;
-        }
+//        log("TOM: _modifiedUpdateNotificationTimeout is called");
+// Need to consider this as it won't overwrite a zero size
+//        if (timeout > 0) {
+//           log("TOM: Timeout being set to: ", newTimeout);
+//            timeout = newTimeout;
+//        }
 
         /* call the original _updateNotificationTimeout with new timeout */
         this._updateNotificationTimeoutOrig(timeout);
     }
 
     _modifiedUpdateStatus() {
-        if (ignoreIdle) {
-            this._userActiveWhileNotificationShown = true;
-        }
+//        log("TOM: _modifiedUpdateStatus is called");
+        //console.warn(new Error().stack);
+//        if (ignoreIdle) {
+//            log("TOM: ignore idle");
+//            this._userActiveWhileNotificationShown = true;
+//        }
 
         /* call the original _updateState anyway */
         this._updateStateOrig();
     }
 
     _modifiedSetUrgency(urgency) {
+//        log("TOM: _modifiedSetUrgency is called");
         /* call the original setUrgency */
-        if (newTimeout === 0) {
-            this._setUrgencyOrig(MessageTray.Urgency.CRITICAL);
-        } else if (alwaysNormal) {
-            this._setUrgencyOrig(MessageTray.Urgency.NORMAL);
-        } else {
-            this._setUrgencyOrig(urgency);
-        }
+//        if (newTimeout === 0) {
+//            log("TOM: Urgency set to CRITICAL");
+//            this._setUrgencyOrig(MessageTray.Urgency.CRITICAL);
+//        } else if (alwaysNormal) {
+//            log("TOM: Urgency set to NORMAL");
+//            this._setUrgencyOrig(MessageTray.Urgency.NORMAL);
+//        } else {
+//            log("TOM: Urgency set to custom urgency: ", urgency);
+//            this._setUrgencyOrig(urgency);
+//        }
+        // Do not really overide - revert change when trying again
+        this._setUrgencyOrig(urgency);
     }
 
     enable() {
@@ -88,6 +127,24 @@ export default class NotificationTimeoutExtension extends Extension {
                 this.readSettings();
             }
         );
+
+        /**
+         * Change destroy()
+         */
+        MessageTray.Notification.prototype._destroyOrig = MessageTray.Notification.prototype.destroy;
+        MessageTray.Notification.prototype.destroy = this._modifiedDestroy;
+        
+        /**
+         * Disable CloseNotification()
+         */
+        NotificationDaemon.GtkNotificationDaemonAppSource.prototype._closeNotificationOrig =  NotificationDaemon.GtkNotificationDaemonAppSource.prototype.closeNotification;
+        NotificationDaemon.GtkNotificationDaemonAppSource.prototype.closeNotification = this._closeNotification;
+        
+        /**
+         * Change _addNotification()
+         */
+        NotificationDaemon.GtkNotificationDaemonAppSource.prototype._addNotificationOrig =  NotificationDaemon.GtkNotificationDaemonAppSource.prototype.addNotification;
+        NotificationDaemon.GtkNotificationDaemonAppSource.prototype.addNotification = this._addNotification;
         
         /**
          * Change _updateNotificationTimeout()
@@ -111,6 +168,24 @@ export default class NotificationTimeoutExtension extends Extension {
     disable() {
         this._settings.disconnect(this._settingsConnectId);
         this._settings = null;
+
+        /**
+         * Revert change destroy()
+         */
+        MessageTray.Notification.prototype.destroy = MessageTray.Notification.prototype._destroyOrig;
+        delete MessageTray.Notification.prototype._destroyOrig;
+        
+        /**
+         * Revert CloseNotification()
+         */
+        NotificationDaemon.GtkNotificationDaemonAppSource.prototype.closeNotification =  NotificationDaemon.GtkNotificationDaemonAppSource.prototype._closeNotificationOrig;
+        delete NotificationDaemon.GtkNotificationDaemonAppSource.prototype._closeNotificationOrig;
+        
+        /**
+         * Revert _addNotification()
+         */
+        NotificationDaemon.GtkNotificationDaemonAppSource.prototype.addNotification =  NotificationDaemon.GtkNotificationDaemonAppSource.prototype._addNotificationOrig;
+        delete NotificationDaemon.GtkNotificationDaemonAppSource.prototype._addNotificationOrig;
 
         /**
          * Reveret change _updateNotificationTimeout()
