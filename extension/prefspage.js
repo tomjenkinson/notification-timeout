@@ -58,6 +58,8 @@ export const PreferencesPage = GObject.registerClass({
      * @return {Object} widget for page in notebook
      */
     _buildGeneralPage() {
+    
+        // log("TOM: Hi2")
 
         let top = 1;
         let labelWidget = null;
@@ -185,6 +187,7 @@ export const PreferencesPage = GObject.registerClass({
             () => {
                 this._newTimeout = parseInt(timeoutComboBox.get_active_id());
                 this._settings.set_int("timeout", this._newTimeout);
+                log("TOM: Timeout set to:", this._newTimeout);
             }
         );
 
