@@ -68,11 +68,11 @@ export default class NotificationTimeoutExtension extends Extension {
     
     _addNotification(notification) {
         // log("TOM: _addNotification is called");
-        if (notification.urgency != MessageTray.Urgency.CRITICAL) {
-            log("TOM: overriding urgency");
-            //console.warn(new Error().stack);
-            notification.urgency = MessageTray.Urgency.CRITICAL;
-        }
+        //if (notification.urgency != MessageTray.Urgency.CRITICAL) {
+        //    log("TOM: overriding urgency");
+        //    console.warn(new Error().stack);
+        //    notification.urgency = MessageTray.Urgency.CRITICAL;
+        //}
         this._addNotificationOrig(notification);
     }
 
