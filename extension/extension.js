@@ -79,10 +79,10 @@ export default class NotificationTimeoutExtension extends Extension {
     _modifiedUpdateNotificationTimeout(timeout) {
 //        log("TOM: _modifiedUpdateNotificationTimeout is called");
 // Need to consider this as it won't overwrite a zero size
-//        if (timeout > 0) {
-//           log("TOM: Timeout being set to: ", newTimeout);
-//            timeout = newTimeout;
-//        }
+        if (timeout > 0) {
+           log("TOM: Timeout being set to: ", newTimeout);
+            timeout = newTimeout;
+        }
 
         /* call the original _updateNotificationTimeout with new timeout */
         this._updateNotificationTimeoutOrig(timeout);
@@ -91,10 +91,10 @@ export default class NotificationTimeoutExtension extends Extension {
     _modifiedUpdateStatus() {
 //        log("TOM: _modifiedUpdateStatus is called");
         //console.warn(new Error().stack);
-//        if (ignoreIdle) {
-//            log("TOM: ignore idle");
-//            this._userActiveWhileNotificationShown = true;
-//        }
+        if (ignoreIdle) {
+            log("TOM: ignore idle");
+            this._userActiveWhileNotificationShown = true;
+        }
 
         /* call the original _updateState anyway */
         this._updateStateOrig();
@@ -103,18 +103,18 @@ export default class NotificationTimeoutExtension extends Extension {
     _modifiedSetUrgency(urgency) {
 //        log("TOM: _modifiedSetUrgency is called");
         /* call the original setUrgency */
-//        if (newTimeout === 0) {
-//            log("TOM: Urgency set to CRITICAL");
-//            this._setUrgencyOrig(MessageTray.Urgency.CRITICAL);
-//        } else if (alwaysNormal) {
-//            log("TOM: Urgency set to NORMAL");
-//            this._setUrgencyOrig(MessageTray.Urgency.NORMAL);
-//        } else {
-//            log("TOM: Urgency set to custom urgency: ", urgency);
-//            this._setUrgencyOrig(urgency);
-//        }
+        if (newTimeout === 0) {
+            log("TOM: Urgency set to CRITICAL");
+            this._setUrgencyOrig(MessageTray.Urgency.CRITICAL);
+        } else if (alwaysNormal) {
+            log("TOM: Urgency set to NORMAL");
+            this._setUrgencyOrig(MessageTray.Urgency.NORMAL);
+        } else {
+            log("TOM: Urgency set to custom urgency: ", urgency);
+            this._setUrgencyOrig(urgency);
+        }
         // Do not really overide - revert change when trying again
-        this._setUrgencyOrig(urgency);
+        //this._setUrgencyOrig(urgency);
     }
 
     enable() {
